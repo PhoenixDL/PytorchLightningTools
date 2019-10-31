@@ -1,1 +1,6 @@
 # TODO: update req. hydra, pytorch-lightning etc.
+tqdm
+numpy
+batchgenerators
+pytorch-lightning
+torch
