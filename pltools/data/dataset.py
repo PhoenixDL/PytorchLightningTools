@@ -269,7 +269,10 @@ class ConcatDataset(AbstractDataset):
 
 
 class BaseCacheDataset(AbstractDataset):
-    def __init__(self, data_path: typing.Union[typing.Union[pathlib.Path, str], list],
+    def __init__(self,
+                 data_path: typing.Union[typing.Union[pathlib.Path,
+                                                      str],
+                                         list],
                  load_fn: typing.Callable,
                  mode: str = "append",
                  **load_kwargs):
