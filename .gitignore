@@ -6,6 +6,8 @@ __pycache__/
 __pycache__
 *.pyc
 
+MNIST
+
 # C extensions
 *.so
 

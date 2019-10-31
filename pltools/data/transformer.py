@@ -65,7 +65,7 @@ class ToTensor(object):
 
         return torch_data
 
-    def _resolve_keys(self, data):
+    def _resolve_keys(self, data) -> typing.Iterable:
         if self.keys is None:
             _keys = data.keys()
         else:
