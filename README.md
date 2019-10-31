@@ -1,8 +1,8 @@
 # Python Template Repo
 Quick Setup
 - [ ] update setup.py (name)
-- [ ] update setup.cfg (versionfile_source, versionfile_build)
 - [ ] rename folder of package
+- [ ] update setup.cfg (versionfile_source, versionfile_build)
 - [ ] `pip install versioneer` and `versioneer install`
 
 Optional for codecov
