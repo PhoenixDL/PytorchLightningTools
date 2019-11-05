@@ -55,7 +55,10 @@ class Splitter:
         self.log_split(split_dict, "Created Single Split with:")
         return split_dict
 
-    def index_split_stratified(self, stratify_key: str = "label", **kwargs) -> SplitType:
+    def index_split_stratified(
+            self,
+            stratify_key: str = "label",
+            **kwargs) -> SplitType:
         split_dict = {}
         stratify = [d[stratify_key] for d in self._dataset]
 
@@ -71,7 +74,10 @@ class Splitter:
         self.log_split(split_dict, "Created Single Split with:")
         return split_dict
 
-    def index_split_grouped(self, groups_key: str = "id", **kwargs) -> SplitType:
+    def index_split_grouped(
+            self,
+            groups_key: str = "id",
+            **kwargs) -> SplitType:
         """
         ..warning:: Shuffling cannot be deactivated
         """
@@ -108,8 +114,10 @@ class Splitter:
             _fold += 1
         return splits
 
-    def index_kfold_fixed_test_stratified(self, stratify_key: str = "label",
-                                          **kwargs) -> typing.Iterable[SplitType]:
+    def index_kfold_fixed_test_stratified(
+            self,
+            stratify_key: str = "label",
+            **kwargs) -> typing.Iterable[SplitType]:
         splits = []
 
         idx_dict = self.index_split_stratified(**kwargs)
@@ -139,7 +147,8 @@ class Splitter:
         logger.info("Creating {} folds.".format(self.val_fols))
         kf = GroupKFold(n_splits=self.val_folds, **kwargs)
         _fold = 0
-        for train_idx, val_idx in kf.split(train_val_idx, groups=train_val_groups):
+        for train_idx, val_idx in kf.split(
+                train_val_idx, groups=train_val_groups):
             splits.append(self._copy_and_fill_dict(
                 idx_dict, train=train_idx, val=val_idx))
             self.log_split(splits[-1], f"Created Fold{_fold}.")

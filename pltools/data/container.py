@@ -73,7 +73,9 @@ class DataContainerID(DataContainer):
                 split_idx[key].append(self._dataset.get_index_by_id(_i))
         super().split_by_index(split_idx)
 
-    def kfold_by_id(self, splits: typing.Iterable[SplitType]) -> DataContainerID:
+    def kfold_by_id(
+            self,
+            splits: typing.Iterable[SplitType]) -> DataContainerID:
         for fold, split in enumerate(splits):
             self.split_by_id(split)
             self._fold = fold
@@ -95,8 +97,12 @@ class DataContainerID(DataContainer):
         splits = [self._read_split_from_df(df, fold) for fold in folds]
         yield from self.kfold_by_id((splits))
 
-    def save_split_to_csv_id(self, path: typing.Union[pathlib.Path, str],
-                             id_key: str, split_column: str = 'split', **kwargs):
+    def save_split_to_csv_id(self,
+                             path: typing.Union[pathlib.Path,
+                                                str],
+                             id_key: str,
+                             split_column: str = 'split',
+                             **kwargs):
         split_dict = {str(id_key): [], str(split_column): []}
         for key, item in self._dset.items():
             for sample in item:

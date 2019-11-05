@@ -86,7 +86,13 @@ class TestDatasetID(unittest.TestCase):
         self.assertIn("label", sample1)
         self.assertTrue("id", "sample1")
 
-    def check_dataset(self, dset_cls, num_samples, expected_len, debug_num, **kwargs):
+    def check_dataset(
+            self,
+            dset_cls,
+            num_samples,
+            expected_len,
+            debug_num,
+            **kwargs):
         load_fn = LoadDummySample()
         dset = dset_cls(list(range(num_samples)), load_fn,
                         debug_num=debug_num, **kwargs)
