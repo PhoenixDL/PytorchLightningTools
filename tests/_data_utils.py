@@ -22,6 +22,7 @@ class DummyDataset(BaseCacheDataset):
                  **load_kwargs):
         super().__init__(list(range(num_samples)), load_fn, **load_kwargs)
 
+
 class Config():
     def __init__(self, **kwargs):
         super().__init__()

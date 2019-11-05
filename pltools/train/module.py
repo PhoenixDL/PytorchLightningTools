@@ -19,7 +19,7 @@ class PLTModule(pl.LightningModule):
 
     @pl.data_loader
     def train_dataloader(self):
-        if (hasattr(self, "train_transformer") and \
+        if (hasattr(self, "train_transformer") and
                 self.train_transformer is not None):
             kwargs = self.get_dataloading_kwargs("train_dataloader")
             return DataLoader(self.train_transformer, **kwargs)
@@ -28,7 +28,7 @@ class PLTModule(pl.LightningModule):
 
     @pl.data_loader
     def val_dataloader(self):
-        if (hasattr(self, "val_transformer") and \
+        if (hasattr(self, "val_transformer") and
                 self.val_transformer is not None):
             kwargs = self.get_dataloading_kwargs("val_dataloader")
             return DataLoader(self.val_transformer, **kwargs)
@@ -37,7 +37,7 @@ class PLTModule(pl.LightningModule):
 
     @pl.data_loader
     def test_dataloader(self):
-        if (hasattr(self, "test_transformer") and \
+        if (hasattr(self, "test_transformer") and
                 self.test_transformer is not None):
             kwargs = self.get_dataloading_kwargs("test_dataloader")
             return DataLoader(self.test_transformer, **kwargs)

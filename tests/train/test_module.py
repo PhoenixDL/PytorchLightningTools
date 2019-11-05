@@ -22,19 +22,19 @@ class TestPLTModule(unittest.TestCase):
             MagicMock())
         kwargs = module.get_dataloading_kwargs('train_dataloader')
         self.assertDictEqual(kwargs, {"batch_size": 8, "num_workers": 4})
-    
+
     def test_get_dataloading_kwargs_train_dataloader(self):
         module = PLTModule(
             Config(train_dataloader={"batch_size": 8, "num_workers": 4},
                    dataloader={"batch_size": 4, "num_workers": 2}),
-                   MagicMock())
-        
+            MagicMock())
+
         train_kwargs = module.get_dataloading_kwargs('train_dataloader')
         self.assertDictEqual(train_kwargs, {"batch_size": 8, "num_workers": 4})
 
         val_kwargs = module.get_dataloading_kwargs('val_dataloader')
         self.assertDictEqual(val_kwargs, {"batch_size": 4, "num_workers": 2})
-    
+
     def test_get_dataloading_kwargs_empty(self):
         module = PLTModule(Config(), MagicMock())
         kwargs = module.get_dataloading_kwargs('train_dataloader')
@@ -44,7 +44,7 @@ class TestPLTModule(unittest.TestCase):
         with self.assertRaises(NotImplementedError):
             self.check_dataloader_super("train")
         self.check_dataloader("train")
-    
+
     def test_val_dataloader(self):
         self.check_dataloader_super("val")
         self.check_dataloader("val")
@@ -52,7 +52,6 @@ class TestPLTModule(unittest.TestCase):
     def test_test_dataloader(self):
         self.check_dataloader_super("test")
         self.check_dataloader("test")
-
 
     def check_dataloader_super(self, name: str):
         loaderName = f"{name}_dataloader"
