@@ -1,7 +1,7 @@
 import torch
 import numpy as np
 
-from pltools.data.dataset import BaseCacheDataset, CacheDatasetID
+from pltools.data.dataset import CacheDataset, CacheDatasetID
 
 
 class LoadDummySample:
@@ -18,7 +18,7 @@ class LoadDummySample:
         return data
 
 
-class DummyDataset(BaseCacheDataset):
+class DummyDataset(CacheDataset):
     def __init__(self, num_samples=10, load_fn=LoadDummySample(),
                  **load_kwargs):
         super().__init__(list(range(num_samples)), load_fn, **load_kwargs)

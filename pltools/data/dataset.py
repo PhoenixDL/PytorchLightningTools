@@ -85,8 +85,8 @@ class AbstractDataset:
         implemented in ``__getitem__``
         See Also
         --------
-        :method:BaseLazyDataset.__getitem__
-        :method:BaseCacheDataset.__getitem__
+        :method:LazyDataset.__getitem__
+        :method:CacheDataset.__getitem__
         Parameters
         ----------
         index : int
@@ -235,8 +235,8 @@ class ConcatDataset(AbstractDataset):
         See Also
         --------
         :method:AbstractDataset.get_sample_from_index
-        :method:BaseLazyDataset.__getitem__
-        :method:BaseCacheDataset.__getitem__
+        :method:LazyDataset.__getitem__
+        :method:CacheDataset.__getitem__
 
         Parameters
         ----------
@@ -268,7 +268,7 @@ class ConcatDataset(AbstractDataset):
         return sum([len(dset) for dset in self.data])
 
 
-class BaseCacheDataset(AbstractDataset):
+class CacheDataset(AbstractDataset):
     def __init__(self,
                  data_path: typing.Union[typing.Union[pathlib.Path,
                                                       str],
@@ -311,7 +311,7 @@ class BaseCacheDataset(AbstractDataset):
         return data_dict
 
 
-class BaseLazyDataset(AbstractDataset):
+class LazyDataset(AbstractDataset):
     def __init__(self, data_path: typing.Union[str, list],
                  load_fn: typing.Callable,
                  **load_kwargs):
@@ -363,7 +363,7 @@ class IDManager:
             return self._find_index_iterative(id)
 
 
-class CacheDatasetID(BaseCacheDataset, IDManager):
+class CacheDatasetID(CacheDataset, IDManager):
     def __init__(self, data_path, load_fn, id_key, cache_ids=True,
                  **kwargs):
         super().__init__(data_path, load_fn, **kwargs)
@@ -372,7 +372,7 @@ class CacheDatasetID(BaseCacheDataset, IDManager):
             IDManager.__init__(self, id_key, cache_ids=cache_ids)
 
 
-class LazyDatasetID(BaseLazyDataset, IDManager):
+class LazyDatasetID(LazyDataset, IDManager):
     def __init__(self, data_path, load_fn, id_key, cache_ids=True,
                  **kwargs):
         super().__init__(data_path, load_fn, **kwargs)
