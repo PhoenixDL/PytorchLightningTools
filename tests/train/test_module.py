@@ -73,6 +73,12 @@ class TestPLTModule(unittest.TestCase):
         self.assertIsInstance(transforms_dataloader, DataLoader)
         self.assertEqual(transforms_dataloader.batch_size, 1)
         self.assertEqual(transforms_dataloader.num_workers, 1)
+    
+    def test_enable_tta_ensemble(self):
+        pass
+    
+    def test_disable_tta_ensemble(self):
+        pass
 
 
 if __name__ == '__main__':

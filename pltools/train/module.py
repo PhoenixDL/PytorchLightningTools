@@ -1,12 +1,22 @@
+from __future__ import annotations
+
+
 import typing
 import torch
 from torch.utils.data import DataLoader
 import pytorch_lightning as pl
+from pltools.data import Transformer
+
+transform_type = typing.Iterable[typing.Callable]
 
 
 class PLTModule(pl.LightningModule):
-    def __init__(self, config, model, train_transformer=None,
-                 val_transformer=None, test_transformer=None, **kwargs):
+    def __init__(self, config,
+                 model: torch.nn.Module,
+                 train_transformer: Transformer = None,
+                 val_transformer: Transformer = None,
+                 test_transformer: Transformer = None,
+                 **kwargs):
         super().__init__(**kwargs)
         self.config = config
         self.model = model
@@ -18,8 +28,8 @@ class PLTModule(pl.LightningModule):
         return self.model(data, *args, **kwargs)
 
     @pl.data_loader
-    def train_dataloader(self):
-        if (hasattr(self, "train_transformer") and \
+    def train_dataloader(self) -> torch.utils.data.DataLoader:
+        if (hasattr(self, "train_transformer") and
                 self.train_transformer is not None):
             kwargs = self.get_dataloading_kwargs("train_dataloader")
             return DataLoader(self.train_transformer, **kwargs)
@@ -27,8 +37,8 @@ class PLTModule(pl.LightningModule):
             return super().train_dataloader()
 
     @pl.data_loader
-    def val_dataloader(self):
-        if (hasattr(self, "val_transformer") and \
+    def val_dataloader(self) -> torch.utils.data.DataLoader:
+        if (hasattr(self, "val_transformer") and
                 self.val_transformer is not None):
             kwargs = self.get_dataloading_kwargs("val_dataloader")
             return DataLoader(self.val_transformer, **kwargs)
@@ -36,15 +46,15 @@ class PLTModule(pl.LightningModule):
             return super().val_dataloader()
 
     @pl.data_loader
-    def test_dataloader(self):
-        if (hasattr(self, "test_transformer") and \
+    def test_dataloader(self) -> torch.utils.data.DataLoader:
+        if (hasattr(self, "test_transformer") and
                 self.test_transformer is not None):
             kwargs = self.get_dataloading_kwargs("test_dataloader")
             return DataLoader(self.test_transformer, **kwargs)
         else:
             return super().test_dataloader()
 
-    def get_dataloading_kwargs(self, name):
+    def get_dataloading_kwargs(self, name: str):
         if hasattr(self.config, name):
             return getattr(self.config, name)
         elif hasattr(self.config, 'dataloader'):
@@ -53,11 +63,11 @@ class PLTModule(pl.LightningModule):
             return {}
 
     def enable_tta_ensemble(self,
-                            trafos: typing.Iterable[typing.Callable] = (),
-                            inverse_trafos: typing.Iterable[typing.Callable] = None,
+                            trafos: transform_type = (),
+                            inverse_trafos: transform_type = None,
                             tta_reduce: typing.Callable = None,
                             models: typing.Iterable[torch.nn.Module] = None,
-                            ensemble_reduce: typing.Callable = None):
+                            ensemble_reduce: typing.Callable = None) -> None:
         self._initial_forward = self.forward
         self.forward = tta_ensemble_wrapper(self.forward, self,
                                             trafos=trafos,
@@ -66,24 +76,26 @@ class PLTModule(pl.LightningModule):
                                             models=models,
                                             ensemble_reduce=ensemble_reduce)
 
-    def disable_tta_ensemble(self, raise_error=False):
+    def disable_tta_ensemble(self) -> bool:
         if hasattr(self, "_initial_forward"):
             self.forward = self._initial_forward
-        elif not raise_error:
-            raise RuntimeError("TTA was not enabled!")
+            return True
         else:
-            pass
+            return False
 
 
-def tta_ensemble_wrapper(func, module,
+def tta_ensemble_wrapper(func: typing.Callable,
+                         module: PLTModule,
                          trafos: typing.Iterable[typing.Callable] = (),
                          inverse_trafos: typing.Iterable[typing.Callable] = None,
                          tta_reduce: typing.Callable = None,
                          models: typing.Iterable[torch.nn.Module] = None,
-                         ensemble_reduce: typing.Callable = None):
+                         ensemble_reduce: typing.Callable = None,
+                         ) -> typing.Callable:
     initial_model = module.model
 
-    def tta_ensemable_forward(self, data, *args, **kwargs):
+    def tta_ensemable_forward(self, data: torch.Tensor,
+                              *args, **kwargs) -> typing.Any:
         ensemble_preds = []
         for _model in models:
             module.module = _model
@@ -91,7 +103,7 @@ def tta_ensemble_wrapper(func, module,
             for idx, _trafo in enumerate(trafos):
                 tta_data = _trafo(data) if _trafo is not None else data
 
-                tta_pred = func(tta_data, **kwargs)
+                tta_pred = func(tta_data, *args, **kwargs)
 
                 if (inverse_trafos is not None and
                         inverse_trafos[idx] is not None):
