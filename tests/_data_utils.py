@@ -1,7 +1,7 @@
 import torch
 import numpy as np
 
-from pltools.data.dataset import BaseCacheDataset
+from pltools.data.dataset import BaseCacheDataset, CacheDatasetID
 
 
 class LoadDummySample:
@@ -22,6 +22,13 @@ class DummyDataset(BaseCacheDataset):
     def __init__(self, num_samples=10, load_fn=LoadDummySample(),
                  **load_kwargs):
         super().__init__(list(range(num_samples)), load_fn, **load_kwargs)
+
+
+class DummyDatasetID(CacheDatasetID):
+    def __init__(self, num_samples=10, load_fn=LoadDummySample(),
+                 **load_kwargs):
+        super().__init__(list(range(num_samples)), load_fn, id_key="id",
+                         **load_kwargs)
 
 
 class Config:
