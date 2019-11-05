@@ -1,3 +1,4 @@
+import torch
 import numpy as np
 
 from pltools.data.dataset import BaseCacheDataset
@@ -22,8 +23,21 @@ class DummyDataset(BaseCacheDataset):
                  **load_kwargs):
         super().__init__(list(range(num_samples)), load_fn, **load_kwargs)
 
-class Config():
+
+class Config:
     def __init__(self, **kwargs):
         super().__init__()
         for key, item in kwargs.items():
             setattr(self, key, item)
+
+
+class DummyModel(torch.nn.Module):
+    def __init__(self):
+        self.call_count = -1
+        self.called = False
+        super().__init__()
+
+    def forward(self, *args, **kwargs):
+        self.call_count += 1
+        self.called = True
+        return self.call_count

@@ -107,3 +107,8 @@ venv.bak/
 
 # mypy
 .mypy_cache/
+.idea/misc.xml
+.idea/modules.xml
+.idea/PytorchLightningTools.iml
+.idea/vcs.xml
+.idea/inspectionProfiles/profiles_settings.xml
