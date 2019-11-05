@@ -19,7 +19,8 @@ class PLTModule(pl.LightningModule):
 
     @pl.data_loader
     def train_dataloader(self):
-        if hasattr(self, "train_transformer"):
+        if (hasattr(self, "train_transformer") and \
+                self.train_transformer is not None):
             kwargs = self.get_dataloading_kwargs("train_dataloader")
             return DataLoader(self.train_transformer, **kwargs)
         else:
@@ -27,7 +28,8 @@ class PLTModule(pl.LightningModule):
 
     @pl.data_loader
     def val_dataloader(self):
-        if hasattr(self, "val_transformer"):
+        if (hasattr(self, "val_transformer") and \
+                self.val_transformer is not None):
             kwargs = self.get_dataloading_kwargs("val_dataloader")
             return DataLoader(self.val_transformer, **kwargs)
         else:
@@ -35,7 +37,8 @@ class PLTModule(pl.LightningModule):
 
     @pl.data_loader
     def test_dataloader(self):
-        if hasattr(self, "test_transformer"):
+        if (hasattr(self, "test_transformer") and \
+                self.test_transformer is not None):
             kwargs = self.get_dataloading_kwargs("test_dataloader")
             return DataLoader(self.test_transformer, **kwargs)
         else:
@@ -44,8 +47,10 @@ class PLTModule(pl.LightningModule):
     def get_dataloading_kwargs(self, name):
         if hasattr(self.config, name):
             return getattr(self.config, name)
-        else:
+        elif hasattr(self.config, 'dataloader'):
             return self.config.dataloader
+        else:
+            return {}
 
     def enable_tta_ensemble(self,
                             trafos: typing.Iterable[typing.Callable] = (),

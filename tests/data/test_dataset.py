@@ -1,1 +1,1 @@
-from ._utils import LoadDummySample
+from tests import LoadDummySample

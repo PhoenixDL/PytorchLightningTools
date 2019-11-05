@@ -7,8 +7,8 @@ from torch.utils.data import DataLoader
 
 from batchgenerators.transforms import ZeroMeanUnitVarianceTransform
 
-from ._utils import DummyDataset
-from pltools.data.transformer import Transformer, ToTensor
+from tests import DummyDataset
+from pltools.data import Transformer, ToTensor
 
 
 class TestToTensor(unittest.TestCase):
