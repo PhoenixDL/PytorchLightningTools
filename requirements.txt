@@ -4,3 +4,4 @@ numpy
 batchgenerators
 pytorch-lightning
 torch
+autopep8
