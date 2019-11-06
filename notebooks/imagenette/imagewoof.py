@@ -66,7 +66,6 @@ plt.imshow(sample.transpose(1, 2, 0))
 # %%
 
 
-
 # %%
 import torch
 from torch.nn import functional as F
@@ -76,7 +75,12 @@ from collections import defaultdict
 
 
 class Classifier(PLTModule):
-    def __init__(self, config, model=resnet18(pretrained=False, num_classes=10)):
+    def __init__(
+        self,
+        config,
+        model=resnet18(
+            pretrained=False,
+            num_classes=10)):
         super().__init__(config=config, model=model)
 
     def training_step(self, batch, batch_nb):
