@@ -9,6 +9,8 @@ from pltools.data import Transformer
 
 transform_type = typing.Iterable[typing.Callable]
 
+# TODO: save config to hparam for automatic logging
+
 
 class PLTModule(pl.LightningModule):
     def __init__(self, config,
@@ -80,6 +82,15 @@ class PLTModule(pl.LightningModule):
         if transformer is not None:
             assert hasattr(self, f'_lazy_{name}_dataloader')
             delattr(self, f'_lazy_{name}_dataloader')
+
+    def lr_finder(self, trainer_cls=pl.Trainer):
+        # TODO: wrap optimizers by scheduler to increase lr after every batch
+        # TODO: EarlyStoppingCallback with break criterion
+        # TODO: return result from training run
+        # TODO: use temporary dir for logging of training stuff
+        trainer = trainer_cls()
+        trainer.fit(self)
+        pass
 
     def enable_tta(self,
                    trafos: transform_type = (),
