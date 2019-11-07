@@ -1,13 +1,16 @@
+import typing
 from omegaconf import DictConfig
 
 DICT_TYPES = (dict, DictConfig)
+DictLikeType = typing.Union[dict, DictConfig]
 
 
-def nested_get(dict_like, key):
+def nested_get(dict_like: DictLikeType, key: str) -> typing.Iterable[typing.Any]:
     return nested_get_fn(dict_like, lambda x: x == key)
 
 
-def nested_get_fn(dict_like, fn):
+def nested_get_fn(dict_like: DictLikeType,
+                  fn: typing.Callable[[str], bool]) -> typing.Iterable[typing.Any]:
     values = []
     for _key, _item in dict_like.items():
         if fn(_key):
@@ -17,12 +20,14 @@ def nested_get_fn(dict_like, fn):
     return values
 
 
-def nested_get_key(dict_like, item):
+def nested_get_key(dict_like: DictLikeType, item: typing.Any) -> typing.Iterable[typing.Any]:
     # returns position in form of a dotted string
     return nested_get_key_fn(dict_like, lambda x: item == x)
 
 
-def nested_get_key_fn(dict_like, fn, sep='.'):
+def nested_get_key_fn(dict_like: DictLikeType,
+                      fn: typing.Callable[[typing.Any], bool],
+                      sep: str = '.') -> typing.Iterable[str]:
     # returns position in form of a dotted string
     def _nested_get_key_fn(_dict_like, prefix):
         keys = []
@@ -30,8 +35,7 @@ def nested_get_key_fn(dict_like, fn, sep='.'):
             if fn(_item):
                 keys.append(f'{prefix}{sep}{_key}')
             elif type(_item) in DICT_TYPES:
-                keys.extend(_nested_get_key_fn(_dict_like[_key],
-                                               f'{prefix}{sep}{_key}'))
+                keys.extend(_nested_get_key_fn(_dict_like[_key], f'{prefix}{sep}{_key}'))
         return keys
 
     found_keys = _nested_get_key_fn(dict_like, '')
@@ -39,7 +43,8 @@ def nested_get_key_fn(dict_like, fn, sep='.'):
     return found_keys
 
 
-def nested_set(dict_like, key, item, create=False, sep='.'):
+def nested_set(dict_like: DictLikeType, key: str, item: typing.Any,
+               create: bool = False, sep: str = '.') -> None:
     # key specifies position inside dict with dots
     keys = str(key).split(sep, 1)
     if len(keys) == 1:
@@ -54,7 +59,7 @@ def nested_set(dict_like, key, item, create=False, sep='.'):
             raise ValueError(f'{key} is not in dict-like')
 
 
-def nested_contains(dict_like, key):
+def nested_contains(dict_like: DictLikeType, key: str) -> bool:
     for _key, _item in dict_like.items():
         if key == _key:
             return True
@@ -63,7 +68,7 @@ def nested_contains(dict_like, key):
     return False
 
 
-def nested_get_first(dict_like, key, default=None):
+def nested_get_first(dict_like: DictLikeType, key: str, default: typing.Any = None) -> typing.Any:
     # uses depth first search to find first key
     for _key, _item in dict_like.items():
         if key == _key:
@@ -73,7 +78,7 @@ def nested_get_first(dict_like, key, default=None):
     return default
 
 
-def patch_dictconf():
+def patch_dictconf() -> None:
     def patch_fn(fn_name, fn):
         if not hasattr(DictConfig, fn_name):
             setattr(DictConfig, fn_name, fn)

@@ -112,3 +112,5 @@ venv.bak/
 .idea/PytorchLightningTools.iml
 .idea/vcs.xml
 .idea/inspectionProfiles/profiles_settings.xml
+.idea/dictionaries/michael.xml
+.idea/codeStyles/codeStyleConfig.xml
