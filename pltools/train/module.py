@@ -79,8 +79,8 @@ class PLTModule(pl.LightningModule):
 
     def _set_transformer(self, name, transformer):
         setattr(self, f'_{name}_transformer', transformer)
-        if transformer is not None:
-            assert hasattr(self, f'_lazy_{name}_dataloader')
+        if (transformer is not None and
+                hasattr(self, f'_lazy_{name}_dataloader')):
             delattr(self, f'_lazy_{name}_dataloader')
 
     def lr_finder(self, trainer_cls=pl.Trainer):
