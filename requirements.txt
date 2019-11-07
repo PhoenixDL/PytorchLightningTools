@@ -1,7 +1,8 @@
-# TODO: update req. hydra, pytorch-lightning etc.
 tqdm
 numpy
 batchgenerators
 pytorch-lightning
 torch
 autopep8
+hydra-core
+omegaconf
