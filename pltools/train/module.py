@@ -4,27 +4,30 @@ from __future__ import annotations
 import typing
 import torch
 from torch.utils.data import DataLoader
+from torch.optim.optimizer import Optimizer
 import pytorch_lightning as pl
+
 from pltools.data import Transformer
+from omegaconf import DictConfig
 
 transform_type = typing.Iterable[typing.Callable]
 
-# TODO: save config to hparam for automatic logging
-
 
 class PLTModule(pl.LightningModule):
-    def __init__(self, config,
+    def __init__(self, hparam: DictConfig,
                  model: torch.nn.Module,
                  train_transformer: Transformer = None,
                  val_transformer: Transformer = None,
                  test_transformer: Transformer = None,
                  **kwargs):
         super().__init__(**kwargs)
-        self.config = config
+        self.hparam = hparam
         self.model = model
         self.train_transformer = train_transformer
         self.val_transformer = val_transformer
         self.test_transformer = test_transformer
+        self._initial_optimizers = None
+        self._initial_forward = None
 
     def forward(self, data: torch.Tensor, *args, **kwargs):
         return self.model(data, *args, **kwargs)
@@ -51,10 +54,10 @@ class PLTModule(pl.LightningModule):
         return DataLoader(self.test_transformer, **kwargs)
 
     def get_dataloading_kwargs(self, name: str):
-        if hasattr(self.config, name):
-            return getattr(self.config, name)
-        elif hasattr(self.config, 'dataloader'):
-            return self.config.dataloader
+        if hasattr(self.hparam, name):
+            return getattr(self.hparam, name)
+        elif hasattr(self.hparam, 'dataloader'):
+            return self.hparam.dataloader
         else:
             return {}
 
@@ -83,14 +86,32 @@ class PLTModule(pl.LightningModule):
                 hasattr(self, f'_lazy_{name}_dataloader')):
             delattr(self, f'_lazy_{name}_dataloader')
 
-    def lr_finder(self, trainer_cls=pl.Trainer):
+    def lr_finder(self, trainer_cls=pl.Trainer, ignore_optim_keys=()):
+        # !!!WARNING!!!: In order for lr_finder to work properly, SGD must be used as an optimizer
+        # the function automatically checks hparam for optimizer classes and replaces them,
+        # as long as they are located inside a dict like object (lists, and tuples are not
+        # # supported)
         # TODO: wrap optimizers by scheduler to increase lr after every batch
         # TODO: EarlyStoppingCallback with break criterion
         # TODO: return result from training run
         # TODO: use temporary dir for logging of training stuff
+
         trainer = trainer_cls()
         trainer.fit(self)
         pass
+
+    # def _replace_optimizers(self):
+    #     optim_keys = self.hparam.nested_get_key_fn(lambda x: issubclass(x, Optimizer))
+    #     self._initial_optimizers = {key: self.hparam.get_with_dot_str(key) for key in optim_keys}
+    #     for key in optim_keys:
+    #         self.hparam.set_with_dot_str(key, torch.optim.SGD)
+    #
+    # def _restore_optimizers(self):
+    #     if self._initial_optimizers is None:
+    #         raise RuntimeError("No initial optimizers found!")
+    #
+    #     for key, item in self._initial_optimizers.items():
+    #         self.hparam.set_with_dot_str(key, item)
 
     def enable_tta(self,
                    trafos: transform_type = (),

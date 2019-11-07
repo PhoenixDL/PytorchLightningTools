@@ -43,18 +43,18 @@ def nested_get_key_fn(dict_like: DictLikeType,
     return found_keys
 
 
-def nested_set(dict_like: DictLikeType, key: str, item: typing.Any,
-               create: bool = False, sep: str = '.') -> None:
+def set_with_dot_str(dict_like: DictLikeType, key: str, item: typing.Any,
+                     create: bool = False, sep: str = '.') -> None:
     # key specifies position inside dict with dots
     keys = str(key).split(sep, 1)
     if len(keys) == 1:
         dict_like[keys[0]] = item
     else:
         if keys[0] in dict_like:
-            nested_set(dict_like[keys[0]], keys[1], item, create, sep)
+            set_with_dot_str(dict_like[keys[0]], keys[1], item, create, sep)
         elif create:
             dict_like[keys[0]] = {}
-            nested_set(dict_like[keys[0]], keys[1], item, create, sep)
+            set_with_dot_str(dict_like[keys[0]], keys[1], item, create, sep)
         else:
             raise ValueError(f'{key} is not in dict-like')
 
@@ -78,6 +78,14 @@ def nested_get_first(dict_like: DictLikeType, key: str, default: typing.Any = No
     return default
 
 
+def get_with_dot_str(dict_like: DictLikeType, key: str, sep='.') -> typing.Any:
+    val = dict_like
+    keys = str(key).split(sep)
+    for _k in keys:
+        val = val[_k]
+    return val
+
+
 def patch_dictconf() -> None:
     def patch_fn(fn_name, fn):
         if not hasattr(DictConfig, fn_name):
@@ -91,9 +99,10 @@ def patch_dictconf() -> None:
         ("nested_get_fn", nested_get_fn),
         ("nested_get_key", nested_get_key),
         ("nested_get_key_fn", nested_get_key_fn),
-        ("nested_set", nested_set),
+        ("set_with_dot_str", set_with_dot_str),
         ("nested_contains", nested_contains),
-        ("nested_get_first", nested_get_first)
+        ("nested_get_first", nested_get_first),
+        ("get_with_dot_str", get_with_dot_str),
     )
 
     no_duplicate = True

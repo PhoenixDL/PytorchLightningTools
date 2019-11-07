@@ -25,15 +25,15 @@ class TestOmegaConfDict(unittest.TestCase):
         val = self.cfg.nested_get_key_fn(lambda x: isinstance(x, str))
         self.assertEqual(val, ["str"])
 
-    def test_nested_set(self):
-        self.cfg.nested_set('nest0.test_num', 123)
+    def test_set_with_dot_str(self):
+        self.cfg.set_with_dot_str('nest0.test_num', 123)
         self.assertEqual(self.cfg["nest0"]["test_num"], 123)
 
-        self.cfg.nested_set('nest1.test_num', 234, create=True)
+        self.cfg.set_with_dot_str('nest1.test_num', 234, create=True)
         self.assertEqual(self.cfg["nest1"]["test_num"], 234)
 
         with self.assertRaises(ValueError):
-            self.cfg.nested_set('nest2.test_num', 234)
+            self.cfg.set_with_dot_str('nest2.test_num', 234)
 
     def test_nested_get_first(self):
         val = self.cfg.nested_get_first("num")
@@ -51,6 +51,10 @@ class TestOmegaConfDict(unittest.TestCase):
 
     def test_patch_dictconf(self):
         self.assertFalse(patch_dictconf())
+
+    def test_get_with_dot_str(self):
+        val = self.cfg.get_with_dot_str("nest0.num")
+        self.assertEqual(val, 2)
 
 
 if __name__ == '__main__':
