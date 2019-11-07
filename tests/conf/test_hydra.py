@@ -17,9 +17,30 @@ class TestOmegaConfDict(unittest.TestCase):
         val = self.cfg.nested_get("num")
         self.assertEqual(val, [2, 1])
 
+    def test_nested_get_key(self):
+        val = self.cfg.nested_get_key(2)
+        self.assertEqual(val, ['nest0.num'])
+
+    def test_nested_get_key_fn(self):
+        val = self.cfg.nested_get_key_fn(lambda x: isinstance(x, str))
+        self.assertEqual(val, ["str"])
+
+    def test_nested_set(self):
+        self.cfg.nested_set('nest0.test_num', 123)
+        self.assertEqual(self.cfg["nest0"]["test_num"], 123)
+
+        self.cfg.nested_set('nest1.test_num', 234, create=True)
+        self.assertEqual(self.cfg["nest1"]["test_num"], 234)
+
+        with self.assertRaises(ValueError):
+            self.cfg.nested_set('nest2.test_num', 234)
+
     def test_nested_get_first(self):
         val = self.cfg.nested_get_first("num")
         self.assertEqual(val, 2)
+
+        val = self.cfg.nested_get_first("does_not_exist", default=False)
+        self.assertFalse(val)
 
     def test_nested_contains(self):
         val = self.cfg.nested_contains("nested_num")
