@@ -21,8 +21,8 @@ class TestLRFind(unittest.TestCase):
     def test_lr_find(self):
         length = 1000
         log_lrs, losses = lr_find(DummyModule(length=length))
-        self.assertEqual(len(log_lrs), length-1)
-        self.assertEqual(len(losses), length-1)
+        self.assertEqual(len(log_lrs), length - 1)
+        self.assertEqual(len(losses), length - 1)
 
     def test_lr_find_max_step(self):
         length = 1000
@@ -35,8 +35,8 @@ class TestLRFind(unittest.TestCase):
         if torch.cuda.is_available():
             length = 1000
             log_lrs, losses = lr_find(DummyModule(length=length), gpu_id=0)
-            self.assertEqual(len(log_lrs), length-1)
-            self.assertEqual(len(losses), length-1)
+            self.assertEqual(len(log_lrs), length - 1)
+            self.assertEqual(len(losses), length - 1)
         else:
             logging.warning("test_lr_find_gpu was skipped because of missing GPU")
 
