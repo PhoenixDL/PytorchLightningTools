@@ -4,6 +4,7 @@ import math
 import tempfile
 import pathlib
 
+from tqdm import tqdm
 from torch.optim.optimizer import Optimizer
 import pytorch_lightning as pl
 
@@ -28,14 +29,14 @@ def lr_find(module: pl.LightningModule, gpu_id: typing.Union[torch.device, int] 
         avg_loss = 0.
         best_loss = 0.
         losses = []
-        log_lrs = []
+        lrs = []
 
         optimizers = initialize_optimizers(module, lr)
 
         if gpu_id is not None:
             module = module.to(gpu_id)
 
-        for batch_num, batch in enumerate(train_dataloader, start=1):
+        for batch_num, batch in enumerate(tqdm(train_dataloader, total=num), start=1):
             if gpu_id is not None:
                 batch = transfer_batch_to_gpu(batch, gpu_id)
             loss = module.training_step(batch, batch_num)['loss']
@@ -55,7 +56,7 @@ def lr_find(module: pl.LightningModule, gpu_id: typing.Union[torch.device, int] 
                 best_loss = smoothed_loss
 
             losses.append(smoothed_loss)
-            log_lrs.append(math.log10(lr))
+            lrs.append(lr)
 
             loss.backward()
             optimizers = step_optimizers(optimizers)
@@ -65,17 +66,17 @@ def lr_find(module: pl.LightningModule, gpu_id: typing.Union[torch.device, int] 
             lr *= mult
             optimizers = set_optimizer_lr(optimizers, lr)
         module.load_state_dict(torch.load(save_path))
-    return log_lrs, losses
+    return lrs, losses
 
 
-def plot_lr_curve(log_lrs: list, losses: list, truncate: bool = True, show=True) -> None:
+def plot_lr_curve(lrs: list, losses: list, truncate: bool = True, show=True) -> None:
     import matplotlib.pyplot as plt
 
     if truncate:
-        _log_lrs = log_lrs[10:-5]
+        _log_lrs = lrs[10:-5]
         _losses = losses[10:-5]
     else:
-        _log_lrs = log_lrs
+        _log_lrs = lrs
         _losses = losses
     plt.plot(_log_lrs, _losses)
     plt.xscale('log')

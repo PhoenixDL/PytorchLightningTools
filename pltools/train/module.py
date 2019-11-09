@@ -14,14 +14,15 @@ transform_type = typing.Iterable[typing.Callable]
 
 
 class PLTModule(pl.LightningModule):
-    def __init__(self, hparam: DictConfig,
+    def __init__(self,
+                 hparams: DictConfig,
                  model: torch.nn.Module,
                  train_transformer: Transformer = None,
                  val_transformer: Transformer = None,
                  test_transformer: Transformer = None,
                  **kwargs):
         super().__init__(**kwargs)
-        self.hparam = hparam
+        self.hparams = hparams
         self.model = model
         self.train_transformer = train_transformer
         self.val_transformer = val_transformer
@@ -54,10 +55,10 @@ class PLTModule(pl.LightningModule):
         return DataLoader(self.test_transformer, **kwargs)
 
     def get_dataloading_kwargs(self, name: str):
-        if hasattr(self.hparam, name):
-            return getattr(self.hparam, name)
-        elif hasattr(self.hparam, 'dataloader'):
-            return self.hparam.dataloader
+        if hasattr(self.hparams, name):
+            return getattr(self.hparams, name)
+        elif hasattr(self.hparams, 'dataloader'):
+            return self.hparams.dataloader
         else:
             return {}
 
@@ -99,8 +100,9 @@ class PLTModule(pl.LightningModule):
                                    )
 
     def disable_tta(self) -> bool:
-        if hasattr(self, "_initial_forward"):
+        if self._initial_forward is not None:
             self.forward = self._initial_forward
+            self._initial_forward = None
             return True
         else:
             return False

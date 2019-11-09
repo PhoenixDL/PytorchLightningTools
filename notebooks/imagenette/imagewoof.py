@@ -1,15 +1,21 @@
 # %%
-# %reload_ext autoreload
-# %autoreload 2
-# %matplotlib inline
+NOTEBOOK = False
 
 # %%
-#  Make sure to install torchvision before running this notebook
+if NOTEBOOK:
+    # %reload_ext autoreload
+    # %autoreload 2
+    # %matplotlib inline
+    pass
 
+    # %%
+    #  Make sure to install torchvision before running this notebook
 
-# %%
+    # %%
 import numpy as np
 from skimage.transform import resize
+
+SIZE = (3, 128, 128)
 
 
 class PytorchDatasetWrapper():
@@ -23,7 +29,7 @@ class PytorchDatasetWrapper():
     def __getitem__(self, index):
         sample = self.dataset[index]
         data = np.array(sample[0]).astype(np.float32).transpose(2, 0, 1)
-        return {'data': resize(data, (3, 128, 128)),
+        return {'data': resize(data, SIZE),
                 'label': sample[1],
                 'id': f'sample{index}'}
 
@@ -150,10 +156,18 @@ module.train_transformer = train_transformer
 module.val_transformer = val_transformer
 
 # %%
+if NOTEBOOK:
+    from pltools.train import lr_find, plot_lr_curve
+    lrs, losses = lr_find(module, gpu_id=0)
+    plot_lr_curve(lrs, losses)
+
+
+# %%
 from pytorch_lightning import Trainer
 
 trainer = Trainer(gpus=1, amp_level='O1', use_amp=False,
-                  fast_dev_run=False, overfit_pct=0)
+                  fast_dev_run=False, overfit_pct=0, max_nb_epochs=5,
+                  min_nb_epochs=5)
 trainer.fit(module)
 
 # %%
