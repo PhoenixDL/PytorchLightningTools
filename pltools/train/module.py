@@ -93,7 +93,7 @@ class PLTModule(pl.LightningModule):
                    tta_reduce: typing.Callable = None,
                    ) -> None:
         self._initial_forward = self.forward
-        self.forward = tta_wrapper(self.forward, self,
+        self.forward = tta_wrapper(self.forward,
                                    trafos=trafos,
                                    inverse_trafos=inverse_trafos,
                                    tta_reduce=tta_reduce,
@@ -109,7 +109,6 @@ class PLTModule(pl.LightningModule):
 
 
 def tta_wrapper(func: typing.Callable,
-                module: PLTModule,
                 trafos: typing.Iterable[typing.Callable] = (),
                 inverse_trafos: typing.Iterable[typing.Callable] = None,
                 tta_reduce: typing.Callable = None,
