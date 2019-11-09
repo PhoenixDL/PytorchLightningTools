@@ -23,7 +23,7 @@ class PytorchDatasetWrapper():
     def __getitem__(self, index):
         sample = self.dataset[index]
         data = np.array(sample[0]).astype(np.float32).transpose(2, 0, 1)
-        return {'data': resize(data, (3, 160, 160)),
+        return {'data': resize(data, (3, 128, 128)),
                 'label': sample[1],
                 'id': f'sample{index}'}
 
@@ -31,7 +31,8 @@ class PytorchDatasetWrapper():
 # %%
 import pathlib
 
-PATH = '/home/micha/data/imagewoof-160'
+# PATH = '/home/micha/data/imagewoof-160'
+PATH = '/home/micha/data/imagenette-160'
 
 PATH = pathlib.Path(PATH)
 train_path = PATH / 'train'
@@ -42,7 +43,9 @@ import torch
 from torchvision.datasets import ImageFolder
 from pltools.data import Transformer, ToTensor
 
-pre_transforms = []
+from batchgenerators.transforms import ZeroMeanUnitVarianceTransform
+
+pre_transforms = [ZeroMeanUnitVarianceTransform()]
 train_transforms = []
 post_transforms = [ToTensor(
     keys=('data', 'label'),
@@ -81,15 +84,18 @@ class Classifier(PLTModule):
         model=resnet18(
             pretrained=False,
             num_classes=10)):
-        super().__init__(config=config, model=model)
+        super().__init__(config, model=model)
 
     def training_step(self, batch, batch_nb):
         # REQUIRED
         x = batch["data"]
         y = batch["label"]
         y_hat = self.forward(x)
+
         loss = F.cross_entropy(y_hat, y)
+
         tensorboard_logs = {'train_loss': loss}
+
         return {'loss': loss,
                 'log': tensorboard_logs}
 
@@ -99,17 +105,18 @@ class Classifier(PLTModule):
         y = batch["label"]
         y_hat = self.forward(x)
 
+        val_loss = F.cross_entropy(y_hat, y, reduction='mean')
+
         # calculate acc
-        labels_hat = torch.argmax(y_hat, dim=1)
-        val_acc = torch.sum(y == labels_hat) / (len(y) * 1.0)
+        with torch.no_grad():
+            labels_hat = torch.argmax(y_hat.detach(), dim=1)
+            val_acc = torch.sum(y == labels_hat) / (len(y) * 1.0)
 
-        val_loss = F.cross_entropy(y_hat, y)
-
-        if batch_nb == 0:
-            normed_batch = x.detach()
-            normed_batch -= normed_batch.min()
-            normed_batch = normed_batch / normed_batch.max()
-            self.logger.experiment.add_images('first_batch', normed_batch)
+            if batch_nb == 0:
+                normed_batch = x.detach()
+                normed_batch -= normed_batch.min()
+                normed_batch = normed_batch / normed_batch.max()
+                self.logger.experiment.add_images('first_val_batch', normed_batch)
 
         return {'val_loss': val_loss, 'val_acc': val_acc}
 
@@ -130,10 +137,11 @@ class Classifier(PLTModule):
 
 
 # %%
-class Config():
+class Config:
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.dataloader = {'batch_size': 32, 'num_workers': 4}
+        self.train_dataloader = {**self.dataloader, "shuffle": True}
 
 
 # %%
@@ -144,7 +152,8 @@ module.val_transformer = val_transformer
 # %%
 from pytorch_lightning import Trainer
 
-trainer = Trainer(gpus=1, amp_level='O2', use_amp=True, fast_dev_run=False)
+trainer = Trainer(gpus=1, amp_level='O1', use_amp=False,
+                  fast_dev_run=False, overfit_pct=0)
 trainer.fit(module)
 
 # %%

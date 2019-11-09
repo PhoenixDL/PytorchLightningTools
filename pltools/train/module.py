@@ -86,33 +86,6 @@ class PLTModule(pl.LightningModule):
                 hasattr(self, f'_lazy_{name}_dataloader')):
             delattr(self, f'_lazy_{name}_dataloader')
 
-    def lr_finder(self, trainer_cls=pl.Trainer, ignore_optim_keys=()):
-        # !!!WARNING!!!: In order for lr_finder to work properly, SGD must be used as an optimizer
-        # the function automatically checks hparam for optimizer classes and replaces them,
-        # as long as they are located inside a dict like object (lists, and tuples are not
-        # # supported)
-        # TODO: wrap optimizers by scheduler to increase lr after every batch
-        # TODO: EarlyStoppingCallback with break criterion
-        # TODO: return result from training run
-        # TODO: use temporary dir for logging of training stuff
-
-        trainer = trainer_cls()
-        trainer.fit(self)
-        pass
-
-    # def _replace_optimizers(self):
-    #     optim_keys = self.hparam.nested_get_key_fn(lambda x: issubclass(x, Optimizer))
-    #     self._initial_optimizers = {key: self.hparam.get_with_dot_str(key) for key in optim_keys}
-    #     for key in optim_keys:
-    #         self.hparam.set_with_dot_str(key, torch.optim.SGD)
-    #
-    # def _restore_optimizers(self):
-    #     if self._initial_optimizers is None:
-    #         raise RuntimeError("No initial optimizers found!")
-    #
-    #     for key, item in self._initial_optimizers.items():
-    #         self.hparam.set_with_dot_str(key, item)
-
     def enable_tta(self,
                    trafos: transform_type = (),
                    inverse_trafos: transform_type = None,

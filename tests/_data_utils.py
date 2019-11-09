@@ -2,6 +2,7 @@ import torch
 import numpy as np
 
 from pltools.data.dataset import CacheDataset, CacheDatasetID
+from pltools.train import PLTModule
 
 
 class LoadDummySample:
@@ -40,11 +41,27 @@ class Config:
 
 class DummyModel(torch.nn.Module):
     def __init__(self):
+        super().__init__()
         self.call_count = -1
         self.called = False
-        super().__init__()
+        self.fn = torch.nn.Linear(10, 10)
 
     def forward(self, *args, **kwargs):
         self.call_count += 1
         self.called = True
         return self.call_count
+
+
+class DummyModule(PLTModule):
+    def __init__(self, length=1000):
+        super().__init__(Config(), DummyModel())
+        self.length = length
+
+    def training_step(self, *args, **kwargs):
+        return {"loss": torch.tensor([1.], requires_grad=True)}
+
+    def train_dataloader(self) -> torch.utils.data.DataLoader:
+        return torch.utils.data.DataLoader([1] * self.length)
+
+    def configure_optimizers(self):
+        return torch.optim.SGD(self.parameters(), lr=0.0003)

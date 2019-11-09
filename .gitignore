@@ -6,6 +6,9 @@ __pycache__/
 __pycache__
 *.pyc
 
+
+notebooks/imagenette/lightning_logs
+lightning_logs
 MNIST
 
 # C extensions
