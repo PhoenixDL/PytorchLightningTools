@@ -1,0 +1,25 @@
+defaults:
+    - mode: release
+
+exp_name: "Imagenette"
+
+hydra:
+  run:
+    # Output directory for normal runs
+    dir: ./${exp_name}_${exp_mode}/${now:%Y-%m-%d_%H-%M-%S}
+  sweep:
+    # Output directory for sweep runs
+    dir: ./${exp_name}_${exp_mode}/${now:%Y-%m-%d_%H-%M-%S}
+    # Output sub directory for sweep runs.
+    subdir: ${hydra.job.num}_${hydra.job.id}
+
+dataloader:
+  batch_size: 32
+  num_workers: ${num_workers}
+  pin_memory: False
+
+train_dataloader:
+  batch_size: ${dataloader.batch_size}
+  num_workers: ${num_workers}
+  pin_memory: ${dataloader.pin_memory}
+  shuffle: True

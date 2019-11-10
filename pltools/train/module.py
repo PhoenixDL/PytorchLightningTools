@@ -55,9 +55,9 @@ class PLTModule(pl.LightningModule):
         return DataLoader(self.test_transformer, **kwargs)
 
     def get_dataloading_kwargs(self, name: str):
-        if hasattr(self.hparams, name):
+        if name in self.hparams:
             return getattr(self.hparams, name)
-        elif hasattr(self.hparams, 'dataloader'):
+        elif 'dataloader' in self.hparams:
             return self.hparams.dataloader
         else:
             return {}

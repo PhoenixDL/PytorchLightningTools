@@ -8,10 +8,7 @@ if NOTEBOOK:
     # %matplotlib inline
     pass
 
-    # %%
-    #  Make sure to install torchvision before running this notebook
-
-    # %%
+# %%
 import numpy as np
 from skimage.transform import resize
 
@@ -66,11 +63,13 @@ val_transformer = Transformer(
     train_dset, pre_transforms + post_transforms)
 
 # %%
-import matplotlib.pyplot as plt
-sample = train_dset[6]['data']
-sample -= sample.min()
-sample = sample / sample.max()
-plt.imshow(sample.transpose(1, 2, 0))
+if NOTEBOOK:
+    import matplotlib.pyplot as plt
+
+    sample = train_dset[6]['data']
+    sample -= sample.min()
+    sample = sample / sample.max()
+    plt.imshow(sample.transpose(1, 2, 0))
 
 # %%
 
@@ -85,11 +84,11 @@ from collections import defaultdict
 
 class Classifier(PLTModule):
     def __init__(
-        self,
-        config,
-        model=resnet18(
-            pretrained=False,
-            num_classes=10)):
+            self,
+            config,
+            model=resnet18(
+                pretrained=False,
+                num_classes=10)):
         super().__init__(config, model=model)
 
     def training_step(self, batch, batch_nb):
@@ -143,31 +142,31 @@ class Classifier(PLTModule):
 
 
 # %%
-class Config:
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.dataloader = {'batch_size': 32, 'num_workers': 8, "pin_memory": True}
-        self.train_dataloader = {**self.dataloader, "shuffle": True}
-
-
-# %%
-module = Classifier(Config())
-module.train_transformer = train_transformer
-module.val_transformer = val_transformer
-
-# %%
-if NOTEBOOK:
-    from pltools.train import lr_find, plot_lr_curve
-    lrs, losses = lr_find(module, gpu_id=0)
-    plot_lr_curve(lrs, losses)
-
-
-# %%
 from pytorch_lightning import Trainer
+from pltools.train import lr_find, plot_lr_curve
+import hydra
 
-trainer = Trainer(gpus=1, amp_level='O1', use_amp=False,
-                  fast_dev_run=False, overfit_pct=0, max_nb_epochs=5,
-                  min_nb_epochs=5)
-trainer.fit(module)
+RUN = 1
+FIND_LR = 0
+
+
+@hydra.main(config_path='./conf/config.yaml')
+def single_run(cfg):
+    module = Classifier(cfg)
+    module.train_transformer = train_transformer
+    module.val_transformer = val_transformer
+
+    if FIND_LR and NOTEBOOK:
+        lrs, losses = lr_find(module, gpu_id=0)
+        plot_lr_curve(lrs, losses)
+
+    if RUN:
+        trainer = Trainer(gpus=1, amp_level='O1', use_amp=False,
+                          fast_dev_run=False, overfit_pct=0,
+                          max_nb_epochs=5, min_nb_epochs=5)
+        trainer.fit(module)
+
+
+single_run()
 
 # %%
