@@ -3,8 +3,9 @@ from torch.utils.data import DataLoader
 
 from pltools.data import Transformer
 from pltools.train import PLTModule
+from pltools.config import Config
 
-from tests import DummyDataset, DummyModel, Config
+from tests import DummyDataset, DummyModel
 
 
 class DummyTransform:
@@ -23,22 +24,20 @@ class DummyTransform:
 
 class TestPLTModule(unittest.TestCase):
     def setUp(self):
+        config = Config({"dataloader": {"batch_size": 1, "num_workers": 1}})
         self.transformer = Transformer(DummyDataset(), [])
-        self.module = PLTModule(
-            Config(dataloader={"batch_size": 1, "num_workers": 1}),
-            DummyModel())
+        self.module = PLTModule(config, DummyModel())
 
     def test_get_dataloading_kwargs_dataloader(self):
-        module = PLTModule(
-            Config(dataloader={"batch_size": 8, "num_workers": 4}),
-            DummyModel())
+        module = PLTModule(Config({"dataloader": {"batch_size": 8, "num_workers": 4}}),
+                           DummyModel())
         kwargs = module.get_dataloading_kwargs('train_dataloader')
         self.assertDictEqual(kwargs, {"batch_size": 8, "num_workers": 4})
 
     def test_get_dataloading_kwargs_train_dataloader(self):
         module = PLTModule(
-            Config(train_dataloader={"batch_size": 8, "num_workers": 4},
-                   dataloader={"batch_size": 4, "num_workers": 2}),
+            Config({"dataloader": {"batch_size": 4, "num_workers": 2},
+                    "train_dataloader": {"batch_size": 8, "num_workers": 4}}),
             DummyModel())
 
         train_kwargs = module.get_dataloading_kwargs('train_dataloader')

@@ -4,18 +4,17 @@ from __future__ import annotations
 import typing
 import torch
 from torch.utils.data import DataLoader
-from torch.optim.optimizer import Optimizer
 import pytorch_lightning as pl
 
 from pltools.data import Transformer
-from omegaconf import DictConfig
+from pltools.config import Config
 
 transform_type = typing.Iterable[typing.Callable]
 
 
 class PLTModule(pl.LightningModule):
     def __init__(self,
-                 hparams: DictConfig,
+                 hparams: Config,
                  model: torch.nn.Module,
                  train_transformer: Transformer = None,
                  val_transformer: Transformer = None,
