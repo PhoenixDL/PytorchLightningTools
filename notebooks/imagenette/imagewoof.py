@@ -146,7 +146,7 @@ class Classifier(PLTModule):
 class Config:
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.dataloader = {'batch_size': 32, 'num_workers': 4}
+        self.dataloader = {'batch_size': 32, 'num_workers': 8, "pin_memory": True}
         self.train_dataloader = {**self.dataloader, "shuffle": True}
 
 
