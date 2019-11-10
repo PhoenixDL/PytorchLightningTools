@@ -6,3 +6,4 @@ torch
 autopep8
 hydra-core
 omegaconf
+nevergrad

@@ -15,7 +15,7 @@ def nested_get_fn(dict_like: DictLikeType,
     for _key, _item in dict_like.items():
         if fn(_key):
             values.append(_item)
-        elif type(_item) in DICT_TYPES:
+        elif any([isinstance(_item, dt) for dt in DICT_TYPES]):
             values.extend(nested_get_fn(dict_like[_key], fn))
     return values
 
@@ -34,7 +34,7 @@ def nested_get_key_fn(dict_like: DictLikeType,
         for _key, _item in _dict_like.items():
             if fn(_item):
                 keys.append(f'{prefix}{sep}{_key}')
-            elif type(_item) in DICT_TYPES:
+            elif any([isinstance(_item, dt) for dt in DICT_TYPES]):
                 keys.extend(_nested_get_key_fn(_dict_like[_key], f'{prefix}{sep}{_key}'))
         return keys
 
@@ -73,7 +73,7 @@ def nested_get_first(dict_like: DictLikeType, key: str, default: typing.Any = No
     for _key, _item in dict_like.items():
         if key == _key:
             return _item
-        elif type(_item) in DICT_TYPES:
+        elif any([isinstance(_item, dt) for dt in DICT_TYPES]):
             return nested_get_first(dict_like[_key], key)
     return default
 
@@ -86,10 +86,10 @@ def get_with_dot_str(dict_like: DictLikeType, key: str, sep='.') -> typing.Any:
     return val
 
 
-def patch_dictconf() -> None:
+def patch_dictconf(module=DictConfig) -> None:
     def patch_fn(fn_name, fn):
-        if not hasattr(DictConfig, fn_name):
-            setattr(DictConfig, fn_name, fn)
+        if not hasattr(module, fn_name):
+            setattr(module, fn_name, fn)
             return True
         else:
             return False

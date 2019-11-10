@@ -1,0 +1,20 @@
+hydra:
+  run:
+    # Output directory for normal runs
+    dir: ./outputs/${now:%Y-%m-%d_%H-%M-%S}
+  sweep:
+    # Output directory for sweep runs
+    dir: ./outputs/${now:%Y-%m-%d_%H-%M-%S}
+    # Output sub directory for sweep runs.
+    subdir: ${hydra.job.num}_${hydra.job.id}
+
+exp:
+  im_a_functionref:
+    functionref: "numpy.min"
+  im_a_classref:
+    classref: "pltools.config.HydraDecoder"
+  im_an_object:
+    class: "pltools.config.HydraDecoder"
+  im_an_function:
+    function: "numpy.min"
+    params: {axis: 0}
