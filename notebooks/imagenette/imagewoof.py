@@ -53,22 +53,38 @@ post_transforms = [ToTensor(
 train_dset = PytorchDatasetWrapper(ImageFolder(train_path))
 train_transforms = Compose(pre_transforms + train_transforms + post_transforms)
 train_data = DataLoader(train_dset, shuffle=True, batch_size=32, num_workers=4,
-                        transforms=train_transforms, collate_fn=numpy_collate)
+                        transforms=train_transforms, collate_fn=numpy_collate,
+                        pin_memory=False)
 
 val_dset = PytorchDatasetWrapper(ImageFolder(val_path))
 val_transforms = Compose(pre_transforms + post_transforms)
 val_data = DataLoader(val_dset, batch_size=32, num_workers=4,
-                      transforms=val_transforms, collate_fn=numpy_collate)
+                      transforms=val_transforms, collate_fn=numpy_collate,
+                      pin_memory=False)
 
 # %%
 
 if NOTEBOOK:
     import matplotlib.pyplot as plt
 
-    sample = train_dset[6]['data']
+    sample = train_dset[32]['data']
     sample -= sample.min()
     sample = sample / sample.max()
     plt.imshow(sample.transpose(1, 2, 0))
+
+    # # %%
+    # data_iter = iter(train_data)
+
+    # # %%
+    # from torchvision.utils import make_grid
+    # import matplotlib.pyplot as plt
+
+    # batch = next(data_iter)
+    # print(batch['data'].shape)
+    # grid = make_grid(batch['data']).cpu().numpy()
+    # grid -= grid.min()
+    # grid = grid / grid.max()
+    # plt.imshow(grid.transpose((1, 2, 0)))
 
 # %%
 
@@ -150,9 +166,9 @@ module.val_data = val_data
 from pltools.train import lr_find, plot_lr_curve
 
 
-if NOTEBOOK:
-    lrs, losses = lr_find(module, gpu_id=0)
-    plot_lr_curve(lrs, losses)
+# if NOTEBOOK:
+#     lrs, losses = lr_find(module, gpu_id=0)
+#     plot_lr_curve(lrs, losses)
 
 # %%
 # plot_lr_curve(lrs[10:-10], losses[10:-10])
