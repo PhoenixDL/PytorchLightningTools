@@ -13,7 +13,8 @@ SplitType = typing.Dict[str, list]
 
 
 class Splitter:
-    def __init__(self, dataset: AbstractDataset,
+    def __init__(self,
+                 dataset: AbstractDataset,
                  val_size: typing.Union[int, float],
                  test_size: typing.Union[int, float] = None):
         super().__init__()

@@ -1,4 +1,4 @@
-from pltools.data.transformer import Transformer, ToTensor
+from pltools.data.transforms import ToTensor
 from pltools.data.dataset import AbstractDataset, CacheDataset, \
     LazyDataset, CacheDatasetID, LazyDatasetID
 from pltools.data.container import DataContainer, DataContainerID

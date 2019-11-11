@@ -1,5 +1,7 @@
 import nevergrad as ng
 
+#TODO: typing
+
 
 def get_instrumentation_from_config(cfg):
     var_type = ng.instrumentation.utils.Variable

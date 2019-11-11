@@ -6,26 +6,25 @@ import torch
 from torch.utils.data import DataLoader
 import pytorch_lightning as pl
 
-from pltools.data import Transformer
 from pltools.config import Config
 
 transform_type = typing.Iterable[typing.Callable]
 
 
-class PLTModule(pl.LightningModule):
+class Module(pl.LightningModule):
     def __init__(self,
                  hparams: Config,
                  model: torch.nn.Module,
-                 train_transformer: Transformer = None,
-                 val_transformer: Transformer = None,
-                 test_transformer: Transformer = None,
+                 train_data: DataLoader = None,
+                 val_data: DataLoader = None,
+                 test_data: DataLoader = None,
                  **kwargs):
         super().__init__(**kwargs)
         self.hparams = hparams
         self.model = model
-        self.train_transformer = train_transformer
-        self.val_transformer = val_transformer
-        self.test_transformer = test_transformer
+        self.train_data = train_data
+        self.val_data = val_data
+        self.test_data = test_data
         self._initial_optimizers = None
         self._initial_forward = None
 
@@ -33,48 +32,37 @@ class PLTModule(pl.LightningModule):
         return self.model(data, *args, **kwargs)
 
     @pl.data_loader
-    def train_dataloader(self) -> torch.utils.data.DataLoader:
-        if self.train_transformer is None:
+    def train_dataloader(self) -> DataLoader:
+        if self.train_data is None:
             return super().train_dataloader()
-        kwargs = self.get_dataloading_kwargs("train_dataloader")
-        return DataLoader(self.train_transformer, **kwargs)
+        return self.train_data
 
     @pl.data_loader
-    def val_dataloader(self) -> torch.utils.data.DataLoader:
-        if self.val_transformer is None:
+    def val_dataloader(self) -> DataLoader:
+        if self.val_data is None:
             return super().val_dataloader()
-        kwargs = self.get_dataloading_kwargs("val_dataloader")
-        return DataLoader(self.val_transformer, **kwargs)
+        return self.val_data
 
     @pl.data_loader
-    def test_dataloader(self) -> torch.utils.data.DataLoader:
-        if self.test_transformer is None:
+    def test_dataloader(self) -> DataLoader:
+        if self.test_data is None:
             return super().test_dataloader()
-        kwargs = self.get_dataloading_kwargs("test_dataloader")
-        return DataLoader(self.test_transformer, **kwargs)
-
-    def get_dataloading_kwargs(self, name: str):
-        if name in self.hparams:
-            return getattr(self.hparams, name)
-        elif 'dataloader' in self.hparams:
-            return self.hparams.dataloader
-        else:
-            return {}
+        return self.test_data
 
     @property
-    def val_transformer(self):
+    def val_data(self):
         return self._get_transformer("val")
 
-    @val_transformer.setter
-    def val_transformer(self, transformer):
+    @val_data.setter
+    def val_data(self, transformer):
         self._set_transformer("val", transformer)
 
     @property
-    def test_transformer(self):
+    def test_data(self):
         return self._get_transformer("test")
 
-    @test_transformer.setter
-    def test_transformer(self, transformer):
+    @test_data.setter
+    def test_data(self, transformer):
         self._set_transformer("test", transformer)
 
     def _get_transformer(self, name):

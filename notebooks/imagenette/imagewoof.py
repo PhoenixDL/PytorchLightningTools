@@ -1,12 +1,12 @@
 # %%
-NOTEBOOK = False
+# %reload_ext autoreload
+# %autoreload 2
+# %matplotlib inline
+NOTEBOOK = 1
 
 # %%
-if NOTEBOOK:
-    # %reload_ext autoreload
-    # %autoreload 2
-    # %matplotlib inline
-    pass
+from omegaconf import OmegaConf
+cfg = OmegaConf.load(r'/home/michael/dev/phoenix/PytorchLightningTools/notebooks/imagenette/config.yaml')
 
 # %%
 import numpy as np
@@ -26,27 +26,23 @@ class PytorchDatasetWrapper():
     def __getitem__(self, index):
         sample = self.dataset[index]
         data = np.array(sample[0]).astype(np.float32).transpose(2, 0, 1)
-        return {'data': resize(data, SIZE),
-                'label': sample[1],
-                'id': f'sample{index}'}
+        return {'data': resize(data, SIZE), 'label': sample[1], 'id': f'sample{index}'}
 
 
 # %%
 import pathlib
 
-# PATH = '/home/micha/data/imagewoof-160'
-PATH = '/home/micha/data/imagenette-160'
-
-PATH = pathlib.Path(PATH)
+PATH = pathlib.Path(cfg.paths.data)
 train_path = PATH / 'train'
 val_path = PATH / 'val'
 
 # %%
 import torch
 from torchvision.datasets import ImageFolder
-from pltools.data import Transformer, ToTensor
+from pltools.data import ToTensor
+from data_loading import DataLoader, numpy_collate
 
-from batchgenerators.transforms import ZeroMeanUnitVarianceTransform
+from batchgenerators.transforms import ZeroMeanUnitVarianceTransform, Compose
 
 pre_transforms = [ZeroMeanUnitVarianceTransform()]
 train_transforms = []
@@ -55,14 +51,17 @@ post_transforms = [ToTensor(
     dtypes=(('data', torch.float32), ('label', torch.int64)))]
 
 train_dset = PytorchDatasetWrapper(ImageFolder(train_path))
-train_transformer = Transformer(
-    train_dset, pre_transforms + train_transforms + post_transforms)
+train_transforms = Compose(pre_transforms + train_transforms + post_transforms)
+train_data = DataLoader(train_dset, shuffle=True, batch_size=32, num_workers=4,
+                        transforms=train_transforms, collate_fn=numpy_collate)
 
 val_dset = PytorchDatasetWrapper(ImageFolder(val_path))
-val_transformer = Transformer(
-    train_dset, pre_transforms + post_transforms)
+val_transforms = Compose(pre_transforms + post_transforms)
+val_data = DataLoader(val_dset, batch_size=32, num_workers=4,
+                      transforms=val_transforms, collate_fn=numpy_collate)
 
 # %%
+
 if NOTEBOOK:
     import matplotlib.pyplot as plt
 
@@ -78,11 +77,11 @@ if NOTEBOOK:
 import torch
 from torch.nn import functional as F
 from torchvision.models import resnet18
-from pltools.train.module import PLTModule
+from pltools.train.module import Module
 from collections import defaultdict
 
 
-class Classifier(PLTModule):
+class Classifier(Module):
     def __init__(
             self,
             config,
@@ -142,31 +141,31 @@ class Classifier(PLTModule):
 
 
 # %%
-from pytorch_lightning import Trainer
+# Create module and save data into module
+module = Classifier(cfg)
+module.train_data = train_data
+module.val_data = val_data
+
+# %%
 from pltools.train import lr_find, plot_lr_curve
-import hydra
-
-RUN = 1
-FIND_LR = 0
 
 
-@hydra.main(config_path='./conf/config.yaml')
-def single_run(cfg):
-    module = Classifier(cfg)
-    module.train_transformer = train_transformer
-    module.val_transformer = val_transformer
+if NOTEBOOK:
+    lrs, losses = lr_find(module, gpu_id=0)
+    plot_lr_curve(lrs, losses)
 
-    if FIND_LR and NOTEBOOK:
-        lrs, losses = lr_find(module, gpu_id=0)
-        plot_lr_curve(lrs, losses)
-
-    if RUN:
-        trainer = Trainer(gpus=1, amp_level='O1', use_amp=False,
-                          fast_dev_run=False, overfit_pct=0,
-                          max_nb_epochs=5, min_nb_epochs=5)
-        trainer.fit(module)
+# %%
+# plot_lr_curve(lrs[10:-10], losses[10:-10])
 
 
-single_run()
+# %%
+from pytorch_lightning import Trainer
+
+
+trainer = Trainer(gpus=[0], amp_level='O1', use_amp=False,
+                  fast_dev_run=False, overfit_pct=0,
+                  max_nb_epochs=20, min_nb_epochs=5)
+trainer.fit(module)
+
 
 # %%

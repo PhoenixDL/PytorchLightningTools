@@ -1,7 +1,8 @@
-defaults:
-    - mode: release
+exp_name: imagenette
+exp_mode: notebook
 
-exp_name: "Imagenette"
+paths:
+  data: '/home/michael/data/imagenette-160'
 
 hydra:
   run:
@@ -13,6 +14,7 @@ hydra:
     # Output sub directory for sweep runs.
     subdir: ${hydra.job.num}_${hydra.job.id}
 
+num_workers: 4
 dataloader:
   batch_size: 32
   num_workers: ${num_workers}

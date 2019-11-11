@@ -1,8 +1,7 @@
 import unittest
 from torch.utils.data import DataLoader
 
-from pltools.data import Transformer
-from pltools.train import PLTModule
+from pltools.train import Module
 from pltools.config import Config
 
 from tests import DummyDataset, DummyModel
@@ -22,34 +21,11 @@ class DummyTransform:
         return data
 
 
-class TestPLTModule(unittest.TestCase):
+class TestModule(unittest.TestCase):
     def setUp(self):
         config = Config({"dataloader": {"batch_size": 1, "num_workers": 1}})
-        self.transformer = Transformer(DummyDataset(), [])
-        self.module = PLTModule(config, DummyModel())
-
-    def test_get_dataloading_kwargs_dataloader(self):
-        module = PLTModule(Config({"dataloader": {"batch_size": 8, "num_workers": 4}}),
-                           DummyModel())
-        kwargs = module.get_dataloading_kwargs('train_dataloader')
-        self.assertDictEqual(kwargs, {"batch_size": 8, "num_workers": 4})
-
-    def test_get_dataloading_kwargs_train_dataloader(self):
-        module = PLTModule(
-            Config({"dataloader": {"batch_size": 4, "num_workers": 2},
-                    "train_dataloader": {"batch_size": 8, "num_workers": 4}}),
-            DummyModel())
-
-        train_kwargs = module.get_dataloading_kwargs('train_dataloader')
-        self.assertDictEqual(train_kwargs, {"batch_size": 8, "num_workers": 4})
-
-        val_kwargs = module.get_dataloading_kwargs('val_dataloader')
-        self.assertDictEqual(val_kwargs, {"batch_size": 4, "num_workers": 2})
-
-    def test_get_dataloading_kwargs_empty(self):
-        module = PLTModule(Config(), DummyModel())
-        kwargs = module.get_dataloading_kwargs('train_dataloader')
-        self.assertFalse(kwargs)
+        self.dataloader = DataLoader(DummyDataset())
+        self.module = Module(config, DummyModel())
 
     def test_train_dataloader(self):
         with self.assertRaises(NotImplementedError):
@@ -66,18 +42,18 @@ class TestPLTModule(unittest.TestCase):
 
     def check_dataloader_super(self, name: str):
         loader_name = f"{name}_dataloader"
-        transform_name = f"{name}_transformer"
+        data_name = f"{name}_data"
 
-        setattr(self.module, transform_name, None)
+        setattr(self.module, data_name, None)
         no_transforms_dataloader = getattr(self.module, loader_name)()
 
         self.assertIsNone(no_transforms_dataloader)
 
     def check_dataloader(self, name: str):
         loader_name = f"{name}_dataloader"
-        transform_name = f"{name}_transformer"
+        data_name = f"{name}_data"
 
-        setattr(self.module, transform_name, self.transformer)
+        setattr(self.module, data_name, self.dataloader)
         loader_fn = getattr(self.module, loader_name)
         transforms_dataloader = loader_fn()
 
@@ -86,7 +62,7 @@ class TestPLTModule(unittest.TestCase):
 
         self.assertIsInstance(transforms_dataloader, DataLoader)
         self.assertEqual(transforms_dataloader.batch_size, 1)
-        self.assertEqual(transforms_dataloader.num_workers, 1)
+        self.assertEqual(transforms_dataloader.num_workers, 0)
 
     def check_enable_tta(self):
         trafos = [DummyTransform(), DummyTransform(), DummyTransform()]

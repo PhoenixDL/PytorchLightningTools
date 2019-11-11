@@ -2,7 +2,7 @@ import torch
 import numpy as np
 
 from pltools.data.dataset import CacheDataset, CacheDatasetID
-from pltools.train import PLTModule
+from pltools.train import Module
 
 
 class LoadDummySample:
@@ -52,7 +52,7 @@ class DummyModel(torch.nn.Module):
         return self.call_count
 
 
-class DummyModule(PLTModule):
+class DummyModule(Module):
     def __init__(self, length=1000):
         super().__init__(Config(), DummyModel())
         self.length = length
