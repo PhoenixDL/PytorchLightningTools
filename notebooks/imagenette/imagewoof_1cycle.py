@@ -153,8 +153,16 @@ class Classifier(Module):
         return {'avg_val_loss': avg_val['val_loss'], 'log': avg_val}
 
     def configure_optimizers(self):
-        return torch.optim.Adam(self.parameters(), lr=0.003)
+        lr = self.hparams["training"]["lr"]
+        optimizer = torch.optim.Adam(self.parameters(), lr=lr)
+        self.one_cycle = torch.optim.lr_scheduler.OneCycleLR(
+            optimizer, lr, steps_per_epoch=len(self.train_data),
+            epochs=self.hparams["training"]["epochs"])
+        return optimizer
 
+    def on_batch_end(self):
+        if self.train:
+            self.one_cycle.step()
 
 # %%
 # Create module and save data into module
