@@ -38,11 +38,14 @@ val_path = PATH / 'val'
 
 # %%
 import torch
+import numpy as np
 from torchvision.datasets import ImageFolder
 from pltools.data import ToTensor
-from data_loading import DataLoader, numpy_collate
+from data_loading.experimental import DataLoader
+from data_loading import numpy_collate
 
 from batchgenerators.transforms import ZeroMeanUnitVarianceTransform, Compose, MirrorTransform
+
 
 pre_transforms = [ZeroMeanUnitVarianceTransform()]
 train_transforms = [MirrorTransform(axes=(0, 1))]
@@ -50,17 +53,29 @@ post_transforms = [ToTensor(
     keys=('data', 'label'),
     dtypes=(('data', torch.float32), ('label', torch.int64)))]
 
+
+def init_fn(worker_id):
+    seed = torch.utils.data._utils.worker._worker_info.seed
+    import numpy as np
+    seed32 = np.array(seed).astype(np.uint32)
+    np.random.seed(seed32)
+
+
 train_dset = PytorchDatasetWrapper(ImageFolder(train_path))
 train_transforms = Compose(pre_transforms + train_transforms + post_transforms)
-train_data = DataLoader(train_dset, shuffle=True, batch_size=32, num_workers=4,
-                        transforms=train_transforms, collate_fn=numpy_collate,
-                        pin_memory=False)
+train_data = DataLoader(train_dset,
+                        shuffle=True, batch_size=32, num_workers=4,
+                        batch_transforms=train_transforms, collate_fn=numpy_collate,
+                        pin_memory=False,
+                        worker_init_fn=init_fn)
 
 val_dset = PytorchDatasetWrapper(ImageFolder(val_path))
 val_transforms = Compose(pre_transforms + post_transforms)
-val_data = DataLoader(val_dset, batch_size=32, num_workers=4,
-                      transforms=val_transforms, collate_fn=numpy_collate,
-                      pin_memory=False)
+val_data = DataLoader(val_dset,
+                      shuffle=False, batch_size=32, num_workers=4,
+                      batch_transforms=val_transforms, collate_fn=numpy_collate,
+                      pin_memory=False,
+                      worker_init_fn=init_fn)
 
 # %%
 
@@ -183,12 +198,17 @@ from pltools.train import lr_find, plot_lr_curve
 
 
 # %%
-from pytorch_lightning import Trainer
+import pytorch_lightning as pl
+from pytorch_lightning.logging import TestTubeLogger
+import os
 
 
-trainer = Trainer(gpus=[0], amp_level='O1', use_amp=False,
-                  fast_dev_run=False, overfit_pct=0,
-                  max_nb_epochs=20, min_nb_epochs=5)
+logger = TestTubeLogger(save_dir=os.getcwd(), name=cfg["exp_name"])
+trainer = pl.Trainer(gpus=[0], amp_level='O1', use_amp=False,
+                     fast_dev_run=False, overfit_pct=0,
+                     early_stop_callback=None,
+                     max_nb_epochs=cfg["training"]["epochs"],
+                     logger=logger)
 trainer.fit(module)
 
 

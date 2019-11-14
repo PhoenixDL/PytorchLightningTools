@@ -1,4 +1,4 @@
-exp_name: imagenette
+exp_name: 'adam_0_0003'
 exp_mode: notebook
 
 paths:
@@ -15,8 +15,8 @@ hydra:
     subdir: ${hydra.job.num}_${hydra.job.id}
 
 training:
-  epochs: 5
-  lr: 0.3
+  epochs: 20
+  lr: 0.003
 
 num_workers: 4
 dataloader:
