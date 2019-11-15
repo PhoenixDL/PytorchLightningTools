@@ -8,9 +8,9 @@ __pycache__
 
 *_private*
 
-notebooks/imagenette/lightning_logs
-lightning_logs
-MNIST
+notebooks/imagenette/lightning_logs/
+lightning_logs/
+MNIST/
 
 # C extensions
 *.so
