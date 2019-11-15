@@ -37,6 +37,7 @@ class DataLoader(_DataLoader):
     :ref:`multiprocessing-best-practices` on more details related
     to multiprocessing in PyTorch.
     """
+
     def __init__(self, dataset, batch_size=1, shuffle=False,
                  batch_transforms=None, sampler=None,
                  batch_sampler=None, num_workers=0, collate_fn=None,
@@ -54,7 +55,7 @@ class DataLoader(_DataLoader):
             set to ``True`` to have the data reshuffled at every epoch
             (default: ``False``)
         batch_transforms : callable, optional
-            transforms which can be applied to a whole batch. 
+            transforms which can be applied to a whole batch.
             Usually this accepts either mappings or sequences and returns the
             same type containing transformed elements
         sampler : torch.utils.data.Sampler, optional
@@ -65,7 +66,7 @@ class DataLoader(_DataLoader):
             indices at a time. Mutually exclusive with :attr:`batch_size`,
             :attr:`shuffle`, :attr:`sampler`, and :attr:`drop_last`.
         num_workers : int, optional
-            how many subprocesses to use for data loading. 
+            how many subprocesses to use for data loading.
             ``0`` means that the data will be loaded in the main process.
             (default: ``0``)
         collate_fn : callable, optional
@@ -115,9 +116,10 @@ class DataLoader(_DataLoader):
 
 class BatchTransformer(object):
     """
-    A callable wrapping the collate_fn to enable transformations on a 
+    A callable wrapping the collate_fn to enable transformations on a
     batch-basis.
     """
+
     def __init__(self, collate_fn: Callable, transforms: Callable = None,
                  auto_convert=True):
         """
@@ -128,7 +130,7 @@ class BatchTransformer(object):
             mini-batch of Tensor(s).  Used when using batched loading from a
             map-style dataset.
         transforms : callable, optional
-            transforms which can be applied to a whole batch. 
+            transforms which can be applied to a whole batch.
             Usually this accepts either mappings or sequences and returns the
             same type containing transformed elements
         auto_convert : bool, optional

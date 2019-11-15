@@ -132,7 +132,7 @@ class Classifier(Module):
         loss = F.cross_entropy(y_hat, y)
 
         tensorboard_logs = {'train_loss': loss}
-        if batch_nb in [0]: # list(range(1)):
+        if batch_nb in [0]:  # list(range(1)):
             normed_batch = x.clone().detach()
             normed_batch -= normed_batch.min()
             normed_batch = normed_batch / normed_batch.max()
