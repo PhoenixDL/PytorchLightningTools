@@ -13,7 +13,7 @@ def numpy_collate(batch):
     if isinstance(elem, np.ndarray):
         return np.stack(batch, 0)
     elif isinstance(elem, torch.Tensor):
-        return numpy_collate([b.cpu().numpy() for b in batch])
+        return numpy_collate([b.detach().cpu().numpy() for b in batch])
     elif isinstance(elem, float) or isinstance(elem, int):
         return np.array(batch)
     elif isinstance(elem, str):
