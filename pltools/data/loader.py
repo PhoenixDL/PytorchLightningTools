@@ -6,6 +6,7 @@ from torch.utils.data.dataloader import \
     __MultiProcessingDataLoaderIter
 from pltools import get_current_debug_mode
 from functools import partial
+from threadpoolctl import threadpool_limits
 
 
 class DataLoader(_DataLoader):
@@ -186,7 +187,8 @@ class _MultiProcessingDataLoaderIter(__MultiProcessingDataLoaderIter):
                                      worker_init_fn=old_worker_init)
         loader.worker_init_fn = new_worker_init_fn
 
-        super().__init__(loader)
+        with threadpool_limits(limits=1, user_api='blas'):
+            super().__init__(loader)
 
         # reset worker_init_fn once the workers have been startet to reset
         # to original state for next epoch
