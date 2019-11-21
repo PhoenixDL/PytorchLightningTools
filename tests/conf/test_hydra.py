@@ -14,7 +14,7 @@ class TestOmegaConfDict(unittest.TestCase):
         self.cfg = DictConfig(_d)
 
     def test_nested_get(self):
-        val = self.cfg.nested_get("num")
+        val = self.cfg.nested_get("num", allow_multiple=True)
         self.assertEqual(val, [2, 1])
 
     def test_nested_get_key(self):
