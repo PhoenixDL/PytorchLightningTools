@@ -5,8 +5,16 @@ DICT_TYPES = (dict, DictConfig)
 DictLikeType = typing.Union[dict, DictConfig]
 
 
-def nested_get(dict_like: DictLikeType, key: str) -> typing.Iterable[typing.Any]:
-    return nested_get_fn(dict_like, lambda x: x == key)
+def nested_get(dict_like: DictLikeType, key: str,
+               allow_multiple: bool = False) -> typing.Iterable[typing.Any]:
+    result = nested_get_fn(dict_like, lambda x: x == key)
+    if allow_multiple:
+        return result
+    else:
+        if len(result) > 1:
+            raise KeyError(f"{key} yielded multiple results")
+        else:
+            return result[0]
 
 
 def nested_get_fn(dict_like: DictLikeType,
