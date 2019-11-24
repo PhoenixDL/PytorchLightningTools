@@ -51,26 +51,26 @@ class Module(pl.LightningModule):
 
     @property
     def val_data(self):
-        return self._get_transformer("val")
+        return self._get_internal_dataloader("val")
 
     @val_data.setter
-    def val_data(self, transformer):
-        self._set_transformer("val", transformer)
+    def val_data(self, loader):
+        self._set_internal_dataloader("val", loader)
 
     @property
     def test_data(self):
-        return self._get_transformer("test")
+        return self._get_internal_dataloader("test")
 
     @test_data.setter
-    def test_data(self, transformer):
-        self._set_transformer("test", transformer)
+    def test_data(self, loader):
+        self._set_internal_dataloader("test", loader)
 
-    def _get_transformer(self, name):
-        return getattr(self, f'_{name}_transformer')
+    def _get_internal_dataloader(self, name):
+        return getattr(self, f'_{name}_loader')
 
-    def _set_transformer(self, name, transformer):
-        setattr(self, f'_{name}_transformer', transformer)
-        if (transformer is not None and
+    def _set_internal_dataloader(self, name, loader):
+        setattr(self, f'_{name}_loader', loader)
+        if (loader is not None and
                 hasattr(self, f'_lazy_{name}_dataloader')):
             delattr(self, f'_lazy_{name}_dataloader')
 
