@@ -4,6 +4,7 @@ import typing
 from functools import partial
 
 from pltools.utils.search import breadth_first_multiple_search
+from omegaconf import ListConfig, DictConfig
 
 
 class HydraDecoder:
@@ -20,6 +21,15 @@ class HydraDecoder:
         return self.decode(config)
 
     def decode(self, config: dict) -> dict:
+        config = self.decode_instances(config)
+        convert_keys = config.nested_get_key_fn(
+            lambda x: any([isinstance(x, t) for t in [ListConfig, DictConfig]]))
+        for key in convert_keys:
+            config.set_with_dot_str(
+                key, config.get_with_dot_str(key).to_container())
+        return config
+
+    def decode_instances(self, config: dict) -> dict:
         for key, decode_fn in self.decode_mapping.items():
             decoding_keys, _ = breadth_first_multiple_search(config, key)
             decoding_keys = [k.rsplit('.', 1)[0] for k in decoding_keys]

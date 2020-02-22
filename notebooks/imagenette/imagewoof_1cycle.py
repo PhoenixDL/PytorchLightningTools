@@ -179,6 +179,7 @@ class Classifier(Module):
         if self.train:
             self.one_cycle.step()
 
+
 # %%
 # Create module and save data into module
 module = Classifier(cfg)

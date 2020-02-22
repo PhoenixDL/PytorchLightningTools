@@ -7,3 +7,4 @@ autopep8
 hydra-core
 omegaconf
 nevergrad
+threadpoolctl
