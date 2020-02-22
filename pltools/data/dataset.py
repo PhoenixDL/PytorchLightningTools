@@ -6,98 +6,15 @@ import pathlib
 from collections import Iterable
 from tqdm import tqdm
 
+from torch.utils.data import Dataset as TorchDset
 
-class AbstractDataset:
+
+class Dataset(TorchDset):
     """
-    Base Class for Dataset
+    Extension of PyTorch's Datasets by a ``get_subset`` method which returns a
+    sub-dataset.
+
     """
-
-    def __init__(self, data_path: str, load_fn: typing.Callable):
-        """
-        Parameters
-        ----------
-        data_path : str
-            path to data samples
-        load_fn : function
-            function to load single sample
-        """
-        self.data_path = data_path
-        self._load_fn = load_fn
-        self.data = []
-
-    @abc.abstractmethod
-    def _make_dataset(self, path: str):
-        """
-        Create dataset
-        Parameters
-        ----------
-        path : str
-            path to data samples
-        Returns
-        -------
-        list
-            data: List of sample paths if lazy; List of samples if not
-        """
-        pass
-
-    @abc.abstractmethod
-    def __getitem__(self, index):
-        """
-        return data with given index (and loads it before if lazy)
-        Parameters
-        ----------
-        index : int
-            index of data
-        Returns
-        -------
-        dict
-            data
-        """
-        pass
-
-    def __len__(self):
-        """
-        Return number of samples
-        Returns
-        -------
-        int
-            number of samples
-        """
-        return len(self.data)
-
-    def __iter__(self):
-        """
-        Return an iterator for the dataset
-        Returns
-        -------
-        object
-            a single sample
-        """
-        return _DatasetIter(self)
-
-    def get_sample_from_index(self, index):
-        """
-        Returns the data sample for a given index
-        (without any loading if it would be necessary)
-        This implements the base case and can be subclassed
-        for index mappings.
-        The actual loading behaviour (lazy or cached) should be
-        implemented in ``__getitem__``
-        See Also
-        --------
-        :method:LazyDataset.__getitem__
-        :method:CacheDataset.__getitem__
-        Parameters
-        ----------
-        index : int
-            index corresponding to targeted sample
-        Returns
-        -------
-        Any
-            sample corresponding to given index
-        """
-
-        return self.data[index]
 
     def get_subset(self, indices):
         """
@@ -108,7 +25,7 @@ class AbstractDataset:
             valid indices to extract subset from current dataset
         Returns
         -------
-        :class:`BlankDataset`
+        :class:`SubsetDataset`
             the subset
         """
 
@@ -123,41 +40,18 @@ class AbstractDataset:
                 kwargs[key] = val
 
         kwargs["old_getitem"] = self.__class__.__getitem__
-        subset_data = [self.get_sample_from_index(idx) for idx in indices]
+        subset_data = [self[idx] for idx in indices]
 
-        return BlankDataset(subset_data, **kwargs)
+        return SubsetDataset(subset_data, **kwargs)
 
 
-class _DatasetIter(object):
+# NOTE: For backward compatibility (should be removed ASAP)
+AbstractDataset = Dataset
+
+
+class SubsetDataset(Dataset):
     """
-    Iterator for dataset
-    """
-
-    def __init__(self, dset):
-        """
-        Parameters
-        ----------
-        dset: :class: `AbstractDataset`
-            the dataset which should be iterated
-        """
-        self._dset = dset
-        self._curr_index = 0
-
-    def __iter__(self):
-        return self
-
-    def __next__(self):
-        if self._curr_index >= len(self._dset):
-            raise StopIteration
-
-        sample = self._dset[self._curr_index]
-        self._curr_index += 1
-        return sample
-
-
-class BlankDataset(AbstractDataset):
-    """
-    Blank Dataset loading the data, which has been passed
+    A Dataset loading the data, which has been passed
     in it's ``__init__`` by it's ``_sample_fn``
     """
 
@@ -165,8 +59,9 @@ class BlankDataset(AbstractDataset):
         """
         Parameters
         ----------
+
         data : iterable
-            data to load
+            data to load (subset of original data)
         old_getitem : function
             get item method of previous dataset
         **kwargs :
@@ -182,11 +77,13 @@ class BlankDataset(AbstractDataset):
 
     def __getitem__(self, index):
         """
-        returns single sample corresponding to ``index`` via the ``_sample_fn``
+        returns single sample corresponding to ``index`` via the old get_item
+
         Parameters
         ----------
         index : int
             index specifying the data to load
+
         Returns
         -------
         dict
@@ -197,6 +94,7 @@ class BlankDataset(AbstractDataset):
     def __len__(self):
         """
         returns the length of the dataset
+
         Returns
         -------
         int
@@ -205,70 +103,7 @@ class BlankDataset(AbstractDataset):
         return len(self.data)
 
 
-class ConcatDataset(AbstractDataset):
-    def __init__(self, *datasets):
-        """
-        Concatenate multiple datasets to one
-
-        Parameters
-        ----------
-        datasets:
-            variable number of datasets
-        """
-        super().__init__(None, None)
-
-        # check if first item in datasets is list and datasets is of length 1
-        if (len(datasets) == 1) and isinstance(datasets[0], list):
-            datasets = datasets[0]
-
-        self.data = datasets
-
-    def get_sample_from_index(self, index: int) -> typing.Any:
-        """
-        Returns the data sample for a given index
-        (without any loading if it would be necessary)
-        This method implements the index mapping of a global index to
-        the subindices for each dataset.
-        The actual loading behaviour (lazy or cached) should be
-        implemented in ``__getitem__``
-
-        See Also
-        --------
-        :method:AbstractDataset.get_sample_from_index
-        :method:LazyDataset.__getitem__
-        :method:CacheDataset.__getitem__
-
-        Parameters
-        ----------
-        index : int
-            index corresponding to targeted sample
-
-        Returns
-        -------
-        Any
-            sample corresponding to given index
-        """
-        curr_max_index = 0
-        for dset in self.data:
-            prev_max_index = curr_max_index
-            curr_max_index += len(dset)
-
-            if prev_max_index <= index < curr_max_index:
-                return dset[index - prev_max_index]
-            else:
-                continue
-
-        raise IndexError("Index %d is out of range for %d items in datasets" %
-                         (index, len(self)))
-
-    def __getitem__(self, index: int) -> typing.Any:
-        return self.get_sample_from_index(index)
-
-    def __len__(self) -> int:
-        return sum([len(dset) for dset in self.data])
-
-
-class CacheDataset(AbstractDataset):
+class CacheDataset(Dataset):
     def __init__(self,
                  data_path: typing.Union[typing.Union[pathlib.Path,
                                                       str],
@@ -279,7 +114,8 @@ class CacheDataset(AbstractDataset):
         """
         Supported modes are: :param:`append` and :param:`extend`
         """
-        super().__init__(data_path, load_fn)
+        super().__init__()
+        self._load_fn = load_fn
         self._load_kwargs = load_kwargs
         self.data = self._make_dataset(data_path, mode)
 
@@ -307,17 +143,18 @@ class CacheDataset(AbstractDataset):
             raise TypeError(f"Unknown mode detected: {mode} not supported.")
 
     def __getitem__(self, index: int) -> dict:
-        data_dict = self.get_sample_from_index(index)
+        data_dict = self._load_fn(self.data[index], **self._load_kwargs)
         return data_dict
 
 
-class LazyDataset(AbstractDataset):
+class LazyDataset(Dataset):
     def __init__(self, data_path: typing.Union[str, list],
                  load_fn: typing.Callable,
                  **load_kwargs):
-        super().__init__(data_path, load_fn)
+        super().__init__()
+        self._load_fn = load_fn
         self._load_kwargs = load_kwargs
-        self.data = self._make_dataset(self.data_path)
+        self.data = self._make_dataset(data_path)
 
     def _make_dataset(self, path: typing.Union[typing.Union[pathlib.Path, str],
                                                list]) -> typing.List[dict]:
@@ -327,7 +164,7 @@ class LazyDataset(AbstractDataset):
         return path
 
     def __getitem__(self, index: int) -> dict:
-        data_dict = self._load_fn(self.get_sample_from_index(index),
+        data_dict = self._load_fn(self.data[index],
                                   **self._load_kwargs)
         return data_dict
 
